@@ -8,8 +8,8 @@ import userRouter from "./routes/users.js";
 
 const app = express();
 dotenv.config();
-app.use(express.json());
 
+//CONNECTION
 const connect = async () => {
   try {
     await mongoose.connect(process.env.MONGO);
@@ -23,11 +23,26 @@ mongoose.connection.on("disconnected", () => {
   console.log("mongoDB disconnected!");
 });
 
+//MIDDLEWARE
+app.use(express.json());
+
 app.use("/api/auth", authRouter);
 app.use("/api/hotel", hotelRouter);
 app.use("/api/room", roomRouter);
 app.use("/api/user", userRouter);
 
+app.use((err, req, res, next) => {
+  const errorStatus = err.status || 500;
+  const errorMessage = err.message || "Something went wrong!";
+  return res.status(errorStatus).json({
+    success: false,
+    status: errorStatus,
+    message: errorMessage,
+    stack: err.stack
+  });
+});
+
+//SERVER CALL
 app.listen(5050, () => {
   connect();
   console.log(`connected backend on port ${process.env.PORT}`);
